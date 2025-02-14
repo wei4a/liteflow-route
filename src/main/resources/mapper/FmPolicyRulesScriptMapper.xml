@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rule.mapper.FmPolicyRulesScriptMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.rule.model.FmPolicyRulesScript">
+            <result property="scriptId" column="SCRIPT_ID" jdbcType="VARCHAR"/>
+            <result property="scriptName" column="SCRIPT_NAME" jdbcType="VARCHAR"/>
+            <result property="scriptData" column="SCRIPT_DATA" jdbcType="VARCHAR"/>
+            <result property="scriptType" column="SCRIPT_TYPE" jdbcType="VARCHAR"/>
+            <result property="scriptLanguage" column="SCRIPT_LANGUAGE" jdbcType="VARCHAR"/>
+            <result property="enable" column="ENABLE" jdbcType="DECIMAL"/>
+        <result property="scriptKey" column="SCRIPT_KEY" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        SCRIPT_ID,SCRIPT_NAME,SCRIPT_DATA,
+        SCRIPT_TYPE,SCRIPT_LANGUAGE,ENABLE,SCRIPT_KEY
+    </sql>
+</mapper>

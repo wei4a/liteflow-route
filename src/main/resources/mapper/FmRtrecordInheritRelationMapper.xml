@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rule.mapper.FmRtrecordInheritRelationMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.rule.model.FmRtrecordInheritRelation">
+            <result property="parentId" column="PARENT_ID" jdbcType="DECIMAL"/>
+            <result property="childId" column="CHILD_ID" jdbcType="DECIMAL"/>
+            <result property="ruleId" column="RULE_ID" jdbcType="DECIMAL"/>
+            <result property="inheritType" column="INHERIT_TYPE" jdbcType="DECIMAL"/>
+            <result property="ruleTime" column="RULE_TIME" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        PARENT_ID,CHILD_ID,RULE_ID,
+        INHERIT_TYPE,RULE_TIME
+    </sql>
+</mapper>

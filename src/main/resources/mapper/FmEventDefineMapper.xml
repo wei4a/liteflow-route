@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.rule.mapper.FmEventDefineMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.rule.model.FmEventDefine">
+            <result property="eventId" column="EVENT_ID" jdbcType="VARCHAR"/>
+            <result property="deviceSpecialty" column="DEVICE_SPECIALTY" jdbcType="VARCHAR"/>
+            <result property="deviceService" column="DEVICE_SERVICE" jdbcType="VARCHAR"/>
+            <result property="deviceServiceSub" column="DEVICE_SERVICE_SUB" jdbcType="VARCHAR"/>
+            <result property="deviceVendor" column="DEVICE_VENDOR" jdbcType="VARCHAR"/>
+            <result property="deviceType" column="DEVICE_TYPE" jdbcType="VARCHAR"/>
+            <result property="deviceVersion" column="DEVICE_VERSION" jdbcType="VARCHAR"/>
+            <result property="vendorEventId" column="VENDOR_EVENT_ID" jdbcType="VARCHAR"/>
+            <result property="vendorEventFacl" column="VENDOR_EVENT_FACL" jdbcType="VARCHAR"/>
+            <result property="vendorEventSeve" column="VENDOR_EVENT_SEVE" jdbcType="VARCHAR"/>
+            <result property="title" column="TITLE" jdbcType="VARCHAR"/>
+            <result property="name" column="NAME" jdbcType="VARCHAR"/>
+            <result property="severity" column="SEVERITY" jdbcType="DECIMAL"/>
+            <result property="comments" column="COMMENTS" jdbcType="VARCHAR"/>
+            <result property="facility" column="FACILITY" jdbcType="DECIMAL"/>
+            <result property="facilityLogic" column="FACILITY_LOGIC" jdbcType="VARCHAR"/>
+            <result property="facilityLogicSub" column="FACILITY_LOGIC_SUB" jdbcType="VARCHAR"/>
+            <result property="referenceDevice" column="REFERENCE_DEVICE" jdbcType="VARCHAR"/>
+            <result property="referenceService" column="REFERENCE_SERVICE" jdbcType="VARCHAR"/>
+            <result property="associateFlag" column="ASSOCIATE_FLAG" jdbcType="VARCHAR"/>
+            <result property="harvestType" column="HARVEST_TYPE" jdbcType="DECIMAL"/>
+            <result property="category" column="CATEGORY" jdbcType="VARCHAR"/>
+            <result property="isReport" column="IS_REPORT" jdbcType="DECIMAL"/>
+            <result property="specFileName" column="SPEC_FILE_NAME" jdbcType="VARCHAR"/>
+            <result property="specRowNum" column="SPEC_ROW_NUM" jdbcType="VARCHAR"/>
+            <result property="modifyUser" column="MODIFY_USER" jdbcType="VARCHAR"/>
+            <result property="modifyTime" column="MODIFY_TIME" jdbcType="TIMESTAMP"/>
+            <result property="event1" column="EVENT1" jdbcType="VARCHAR"/>
+            <result property="event2" column="EVENT2" jdbcType="VARCHAR"/>
+            <result property="event3" column="EVENT3" jdbcType="VARCHAR"/>
+            <result property="event4" column="EVENT4" jdbcType="VARCHAR"/>
+            <result property="event5" column="EVENT5" jdbcType="VARCHAR"/>
+            <result property="event6" column="EVENT6" jdbcType="VARCHAR"/>
+            <result property="event7" column="EVENT7" jdbcType="VARCHAR"/>
+            <result property="event8" column="EVENT8" jdbcType="VARCHAR"/>
+            <result property="event9" column="EVENT9" jdbcType="VARCHAR"/>
+            <result property="event10" column="EVENT10" jdbcType="VARCHAR"/>
+            <result property="event11" column="EVENT11" jdbcType="VARCHAR"/>
+            <result property="event12" column="EVENT12" jdbcType="VARCHAR"/>
+            <result property="event13" column="EVENT13" jdbcType="VARCHAR"/>
+            <result property="event14" column="EVENT14" jdbcType="VARCHAR"/>
+            <result property="event15" column="EVENT15" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        EVENT_ID,DEVICE_SPECIALTY,DEVICE_SERVICE,
+        DEVICE_SERVICE_SUB,DEVICE_VENDOR,DEVICE_TYPE,
+        DEVICE_VERSION,VENDOR_EVENT_ID,VENDOR_EVENT_FACL,
+        VENDOR_EVENT_SEVE,TITLE,NAME,
+        SEVERITY,COMMENTS,FACILITY,
+        FACILITY_LOGIC,FACILITY_LOGIC_SUB,REFERENCE_DEVICE,
+        REFERENCE_SERVICE,ASSOCIATE_FLAG,HARVEST_TYPE,
+        CATEGORY,IS_REPORT,SPEC_FILE_NAME,
+        SPEC_ROW_NUM,MODIFY_USER,MODIFY_TIME,
+        EVENT1,EVENT2,EVENT3,
+        EVENT4,EVENT5,EVENT6,
+        EVENT7,EVENT8,EVENT9,
+        EVENT10,EVENT11,EVENT12,
+        EVENT13,EVENT14,EVENT15
+    </sql>
+</mapper>

@@ -1,0 +1,24 @@
+package com.example.rule.component;
+
+import com.example.rule.model.FmPolicyRules;
+import com.example.rule.model.MSEvent;
+import com.example.rule.model.SupplementaryConditions;
+import com.example.rule.service.RuleMatcher;
+import com.yomahub.liteflow.annotation.LiteflowComponent;
+import com.yomahub.liteflow.core.NodeComponent;
+@LiteflowComponent("delayRulesJudgeCmp")
+public class DelayRulesJudgeCmp extends NodeComponent {
+    @Override
+    public void process() throws Exception {
+        SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
+        int delayedAlarm = spConditions.getDelayedAlarm();
+        MSEvent msEvent = spConditions.getMsEvent();
+        RuleMatcher ruleMatcher = spConditions.getRuleMatcher();
+        FmPolicyRules fmPolicyRules = spConditions.getFmPolicyRules();
+        if (fmPolicyRules.getIsDelay()>0&&delayedAlarm<1) {
+            //延迟规则
+            ruleMatcher.processDelayedRule(msEvent, fmPolicyRules);
+            this.setIsEnd(true);
+        }
+    }
+}
