@@ -120,9 +120,17 @@ public class RuleMatcher {
                 }
             }else if (inheritType == 1) {
                 if (contextBean.doMainSubRelation) {
-                    //todo
+                    List<MSEvent> parents = contextBean.getParents();
+                    List<MSEvent> childrens = contextBean.getChildrens();
+                    for (MSEvent children : childrens) {
+                        childIds.add(children.getRecordId());
+                    }
+                    for (MSEvent parent : parents) {
+                        finishedReleationShip(parent, childIds, fmPolicyRules);
+                    }
                 }
             }
+
         } else {
             log.info(errorMsg, response.getCause());
         }
