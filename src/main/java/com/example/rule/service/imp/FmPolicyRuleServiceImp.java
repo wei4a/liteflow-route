@@ -31,9 +31,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static com.example.rule.service.RuleMatcher.getMqMessage;
-
 @Service
 @Slf4j
 public class FmPolicyRuleServiceImp extends ServiceImpl<FmPolicyRuleMapper, FmPolicyRules> implements FmPolicyRuleService {

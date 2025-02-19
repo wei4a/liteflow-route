@@ -1,7 +1,6 @@
 package com.example.rule.component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.rule.model.FmPolicyRules;
 import com.example.rule.model.MSEvent;
 import com.example.rule.model.SupplementaryConditions;
