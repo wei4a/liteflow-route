@@ -22,6 +22,7 @@ public class WhetherDeriveScript implements CommonScriptBody {
         log.print("关联条件子事件数量：" + childrens.size());
         //遍历childrens 获取网元名称并去重计数
         if (CollectionUtils.isNotEmpty(childrens)) {
+            log.print("是否衍生：" + spConditions.isDoDerive());
             Set<String> netElementNames = new HashSet<>();
             for (MSEvent children : childrens) {
                 netElementNames.add(children.getDeviceName());

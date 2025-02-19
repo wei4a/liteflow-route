@@ -240,7 +240,7 @@ public class RuleMatcher {
                         int inheritType = fmPolicyRules.getInheritType();
                         List<Long> childIds = new ArrayList<>();
                         if (inheritType == 2) {
-                            if (contextBean.doDerive) {
+                            if (contextBean.isDoDerive()) {
                                 MSEvent newEvent = deriveNewAlarm(contextBean, childIds, fmPolicyRules);
                                 mergeAndFinishInherit(newEvent, childIds, fmPolicyRules);
                             }

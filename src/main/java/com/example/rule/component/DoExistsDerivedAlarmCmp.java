@@ -15,7 +15,12 @@ public class DoExistsDerivedAlarmCmp extends NodeComponent {
     public void process() throws Exception {
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         FmPolicyRules fmPolicyRules = spConditions.getFmPolicyRules();
-        if(fmPolicyRules.getInheritType()==1){
+        if (fmPolicyRules.getInheritType() == 2) {
+            List<MSEvent> parents = spConditions.getParents();
+            if (CollectionUtils.isNotEmpty(parents)) {
+                spConditions.setDoDerive(true);
+            }
+        } else if (fmPolicyRules.getInheritType() == 1) {
             if(spConditions.isSubAlarm()){
                 List<MSEvent> parents = spConditions.getParents();
                 if(CollectionUtils.isNotEmpty(parents)){

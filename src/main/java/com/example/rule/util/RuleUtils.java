@@ -4,6 +4,7 @@ import com.example.rule.model.FmEventDefine;
 import com.example.rule.model.FmPolicyRules;
 import com.example.rule.model.MSEvent;
 import com.example.rule.model.MqMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,6 +15,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class RuleUtils {
     public static final String PROJECT_STATUS = "project_status";
     public static final int NONE_PROJECT_STATUS = 0;

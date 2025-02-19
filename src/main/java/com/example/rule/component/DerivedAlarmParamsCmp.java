@@ -6,10 +6,12 @@ import com.example.rule.model.MSEvent;
 import com.example.rule.model.SupplementaryConditions;
 import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeComponent;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @LiteflowComponent("derivedAlarmParamsCmp")
 public class DerivedAlarmParamsCmp extends NodeComponent {
     @Override
