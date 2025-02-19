@@ -24,8 +24,6 @@ public class SupplementaryConditions {
     private FmPolicyRuleService fmPolicyRuleService;
     @Resource
     public ScriptLogOutput scriptLogOutput= new ScriptLogOutput();
-    @Resource
-    public RuleMatcher ruleMatcher;
     //查询子告警条件
     LambdaQueryWrapper<MSEvent> triggeredParams = Wrappers.lambdaQuery();
     //查询父告警条件

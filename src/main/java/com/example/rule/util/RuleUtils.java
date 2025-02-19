@@ -3,6 +3,7 @@ package com.example.rule.util;
 import com.example.rule.model.FmEventDefine;
 import com.example.rule.model.FmPolicyRules;
 import com.example.rule.model.MSEvent;
+import com.example.rule.model.MqMessage;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -218,5 +219,19 @@ public class RuleUtils {
         Map<Long, FmPolicyRules> uniqueRulesMap = allRules.stream()
                 .collect(Collectors.toMap(FmPolicyRules::getId, rule -> rule, (existing, replacement) -> existing));
         return new ArrayList<>(uniqueRulesMap.values());
+    }
+
+    public static long getDelayTimeReal(MSEvent msEvent, FmPolicyRules rule) {
+        long timeStart = msEvent.getLastTime().getTime() + rule.getDelayTime() * 60 * 1000L;
+        long timeNow = new Date().getTime();
+        return timeStart - timeNow;
+    }
+    public static MqMessage getMqMessage(MSEvent msEvent, FmPolicyRules rule, long timeReal) {
+        MqMessage mqMessage = new MqMessage();
+        mqMessage.setRuleId(Integer.parseInt(rule.getId().toString()));
+        mqMessage.setDelayTime(timeReal);
+        mqMessage.setRecordId(msEvent.getRecordId());
+        mqMessage.setTitle(msEvent.getTitle());
+        return mqMessage;
     }
 }

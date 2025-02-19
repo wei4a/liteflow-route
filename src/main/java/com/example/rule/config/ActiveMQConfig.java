@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 import javax.jms.ConnectionFactory;
 
@@ -50,7 +51,10 @@ public class ActiveMQConfig {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setPubSubDomain(true);
-        factory.setConcurrency("1-10"); // 并发消费者数量
+        factory.setConcurrency("1-10");
+        factory.setSessionTransacted(true);
+        factory.setReceiveTimeout(5000L);
+        factory.setCacheLevel(DefaultMessageListenerContainer.CACHE_SESSION);
         return factory;
     }
 }

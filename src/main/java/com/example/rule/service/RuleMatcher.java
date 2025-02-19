@@ -25,8 +25,6 @@ public class RuleMatcher {
     @Resource
     private FmPolicyRuleService fmPolicyRuleService;
     @Resource
-    private ActiveMQProducer activeMQProducer;
-    @Resource
     private FmService fmService;
     @Resource
     private FmEventDefineService fmEventDefineService;
@@ -45,19 +43,13 @@ public class RuleMatcher {
                 }
                 if (delayTime > 0) {
                     // 延迟执行规则
-                    processDelayedRule(msEvent, rule);
+                    fmPolicyRuleService.processDelayedRule(msEvent, rule);
                 } else {
                     executeRule(msEvent, rule, Integer.parseInt(rule.getId().toString()), "Rule executed successfully: {}", "Rule execution failed: {}");
                 }
                 log.info("Rule executed: {}", rule.getId());
             }
         }
-    }
-    public void processDelayedRule(MSEvent msEvent, FmPolicyRules rule) {
-        long timeReal = getDelayTimeReal(msEvent, rule);
-        MqMessage mqMessage = getMqMessage(msEvent, rule, timeReal);
-        activeMQProducer.sendDelayedRule(mqMessage);
-        log.info("Delayed rule message sent: {}", mqMessage);
     }
     /**
      * 合并规则列表并根据规则ID去重
@@ -229,21 +221,6 @@ public class RuleMatcher {
         conditions.setFmService(fmService);
         conditions.setFmPolicyRules(fmPolicyRules);
         return conditions;
-    }
-
-    private static MqMessage getMqMessage(MSEvent msEvent, FmPolicyRules rule, long timeReal) {
-        MqMessage mqMessage = new MqMessage();
-        mqMessage.setRuleId(Integer.parseInt(rule.getId().toString()));
-        mqMessage.setDelayTime(timeReal);
-        mqMessage.setRecordId(msEvent.getRecordId());
-        mqMessage.setTitle(msEvent.getTitle());
-        return mqMessage;
-    }
-
-    private static long getDelayTimeReal(MSEvent msEvent, FmPolicyRules rule) {
-        long timeStart = msEvent.getLastTime().getTime() + rule.getDelayTime() * 60 * 1000L;
-        long timeNow = new Date().getTime();
-        return timeStart - timeNow;
     }
 
     /**

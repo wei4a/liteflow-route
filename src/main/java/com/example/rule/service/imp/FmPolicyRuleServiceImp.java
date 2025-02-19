@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.rule.mapper.FmPolicyRuleMapper;
 import com.example.rule.model.FmPolicyRules;
 import com.example.rule.model.MSEvent;
+import com.example.rule.model.MqMessage;
+import com.example.rule.service.ActiveMQProducer;
 import com.example.rule.service.FmPolicyRuleService;
+import com.example.rule.util.RuleUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -29,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.example.rule.service.RuleMatcher.getMqMessage;
+
 @Service
 @Slf4j
 public class FmPolicyRuleServiceImp extends ServiceImpl<FmPolicyRuleMapper, FmPolicyRules> implements FmPolicyRuleService {
@@ -42,6 +47,8 @@ public class FmPolicyRuleServiceImp extends ServiceImpl<FmPolicyRuleMapper, FmPo
     private ObjectMapper objectMapper;
     @Resource
     private RedissonClient redissonClient;
+    @Resource
+    private ActiveMQProducer activeMQProducer;
     /**
      * Redis 中规则组的 Key 前缀
      */
@@ -114,6 +121,14 @@ public class FmPolicyRuleServiceImp extends ServiceImpl<FmPolicyRuleMapper, FmPo
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to deserialize rule", e);
         }
+    }
+
+    @Override
+    public void processDelayedRule(MSEvent msEvent, FmPolicyRules rule) {
+        long timeReal = RuleUtils.getDelayTimeReal(msEvent, rule);
+        MqMessage mqMessage = RuleUtils.getMqMessage(msEvent, rule, timeReal);
+        activeMQProducer.sendDelayedRule(mqMessage);
+        log.info("Delayed rule message sent: {}", mqMessage);
     }
 
     /**
