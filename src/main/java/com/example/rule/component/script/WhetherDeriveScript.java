@@ -6,6 +6,7 @@ import com.example.rule.util.ScriptLogOutput;
 import com.yomahub.liteflow.script.ScriptExecuteWrap;
 import com.yomahub.liteflow.script.body.CommonScriptBody;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.MDC;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Set;
 public class WhetherDeriveScript implements CommonScriptBody {
     @Override
     public Void body(ScriptExecuteWrap scriptExecuteWrap) {
+        MDC.put("requestId", scriptExecuteWrap.cmp.getChainId());
         SupplementaryConditions spConditions =scriptExecuteWrap.cmp.getContextBean(SupplementaryConditions.class);
         ScriptLogOutput log = spConditions.getScriptLogOutput();
         log.print("关联条件开始======================================");
