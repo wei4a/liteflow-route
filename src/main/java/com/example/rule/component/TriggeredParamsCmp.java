@@ -9,12 +9,14 @@ import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 
 @LiteflowComponent("triggeredParamsCmp")
 @Slf4j
 public class TriggeredParamsCmp extends NodeComponent {
     @Override
     public void process() throws Exception {
+        MDC.put("requestId", this.getChainId());
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         FmPolicyRules policyRule = spConditions.getFmPolicyRules();
         int inheritType = policyRule.getInheritType();

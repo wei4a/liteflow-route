@@ -9,12 +9,14 @@ import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeBooleanComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 
 @LiteflowComponent("routeCmp")
 @Slf4j
 public class RouteCmp extends NodeBooleanComponent {
     @Override
     public boolean processBoolean() throws Exception {
+        MDC.put("requestId", this.getChainId());
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         FmPolicyRuleService fmPolicyRuleService = spConditions.getFmPolicyRuleService();
         MSEvent msEvent = spConditions.getMsEvent();

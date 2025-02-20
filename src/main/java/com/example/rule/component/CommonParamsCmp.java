@@ -8,12 +8,14 @@ import com.example.rule.util.RuleUtils;
 import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeComponent;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @LiteflowComponent("commonParamsCmp")
 @Slf4j
 public class CommonParamsCmp extends NodeComponent {
     @Override
     public void process() throws Exception {
+        MDC.put("requestId", this.getChainId());
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         MSEvent msEvent = spConditions.getMsEvent();
         FmPolicyRules fmPolicyRules = spConditions.getFmPolicyRules();

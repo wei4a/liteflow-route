@@ -1,0 +1,40 @@
+<configuration>
+    <!-- 定义路由追加器，用于根据 requestId 分发日志 -->
+    <appender name="ROUTING_APPENDER" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <!-- 鉴别器，根据 requestId 区分不同的日志流 -->
+        <discriminator>
+            <key>requestId</key>
+            <defaultValue>main</defaultValue>
+        </discriminator>
+        <sift>
+            <!-- 为每个 requestId 配置按日期滚动的文件追加器 -->
+            <appender name="FILE-${requestId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!-- 定义日志文件名生成器 -->
+                <fileNameGenerator class="ch.qos.logback.core.rolling.helper.ContextBasedNamingAndDateTokenConverter">
+                    <!-- 日志文件路径格式，结合日期和 requestId -->
+                    <pattern>logs/%d{yyyyMMdd}/${requestId}.log</pattern>
+                </fileNameGenerator>
+                <!-- 滚动策略：按天滚动 -->
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <!-- 滚动后的日志文件命名格式，包含日期信息 -->
+                    <fileNamePattern>logs/%d{yyyyMMdd}/${requestId}.%i.log</fileNamePattern>
+                    <!-- 保留的历史日志文件最大数量 -->
+                    <maxHistory>30</maxHistory>
+                    <!-- 每个文件的最大大小（可选配置，如果文件超过此大小会触发滚动） -->
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>10MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                </rollingPolicy>
+                <!-- 日志编码器 -->
+                <encoder>
+                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+
+    <!-- 根日志记录器 -->
+    <root level="INFO">
+        <appender-ref ref="ROUTING_APPENDER"/>
+    </root>
+</configuration>

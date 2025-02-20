@@ -7,6 +7,7 @@ import com.example.rule.model.SupplementaryConditions;
 import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeComponent;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 public class DerivedAlarmParamsCmp extends NodeComponent {
     @Override
     public void process() throws Exception {
+        MDC.put("requestId", this.getChainId());
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         FmPolicyRules fmPolicyRules = spConditions.getFmPolicyRules();
         int inheritType = fmPolicyRules.getInheritType();

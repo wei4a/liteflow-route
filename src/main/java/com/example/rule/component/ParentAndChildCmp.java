@@ -9,6 +9,7 @@ import com.example.rule.service.FmService;
 import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeComponent;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class ParentAndChildCmp extends NodeComponent {
     @Override
     public void process() throws Exception {
+        MDC.put("requestId", this.getChainId());
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         List<MSEvent> parents = spConditions.getParents();
         List<MSEvent> childrens = spConditions.getChildrens();

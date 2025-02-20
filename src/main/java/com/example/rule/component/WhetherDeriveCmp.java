@@ -7,6 +7,7 @@ import com.yomahub.liteflow.annotation.LiteflowComponent;
 import com.yomahub.liteflow.core.NodeComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.MDC;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ import java.util.List;
 public class WhetherDeriveCmp extends NodeComponent {
     @Override
     public void process() throws Exception {
+        MDC.put("requestId", this.getChainId());
         SupplementaryConditions spConditions = this.getContextBean(SupplementaryConditions.class);
         List<MSEvent> childrens = spConditions.getChildrens();
         List<MSEvent> parents = spConditions.getParents();
