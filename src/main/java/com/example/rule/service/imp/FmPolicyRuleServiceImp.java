@@ -124,7 +124,11 @@ public class FmPolicyRuleServiceImp extends ServiceImpl<FmPolicyRuleMapper, FmPo
     public void processDelayedRule(MSEvent msEvent, FmPolicyRules rule) {
         long timeReal = RuleUtils.getDelayTimeReal(msEvent, rule);
         MqMessage mqMessage = RuleUtils.getMqMessage(msEvent, rule, timeReal);
-        activeMQProducer.sendDelayedRule(mqMessage);
+        try {
+            activeMQProducer.sendDelayedRule(mqMessage);
+        } catch (Exception e) {
+            log.error("Failed to send delayed rule message: {}", e.getMessage(), e);
+        }
         log.info("Delayed rule message sent: {}", mqMessage);
     }
 

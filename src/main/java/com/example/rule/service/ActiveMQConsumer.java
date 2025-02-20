@@ -39,14 +39,16 @@ public class ActiveMQConsumer {
     /**
      * 监听延迟队列并处理消息
      *
-     * @param mqMessage 规则消息
+     * @param delaymqMessage 规则消息
      */
     @JmsListener(destination = "rule-delay-queue")
-    public void processDelayedRule(MqMessage mqMessage) {
-        log.info("Received delayed rule message: {}", mqMessage);
+    public void processDelayedRule(String delaymqMessage) {
+        log.info("Received delayed rule message: {}", delaymqMessage);
         // 执行规则
         try {
-            ruleMatcher.matchAndExecuteDelayRules(mqMessage);
+            ObjectMapper objectMapper = new ObjectMapper();
+            MqMessage s = objectMapper.readValue(delaymqMessage, MqMessage.class);
+            ruleMatcher.matchAndExecuteDelayRules(s);
         } catch (Exception e) {
             log.error("Failed to process delayed rule message: {}", e.getMessage(), e);
         }
