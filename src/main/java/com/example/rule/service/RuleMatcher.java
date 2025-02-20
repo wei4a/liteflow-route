@@ -2,20 +2,14 @@ package com.example.rule.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.example.rule.model.*;
-import com.example.rule.util.RuleUtils;
 import com.yomahub.liteflow.core.FlowExecutor;
 import com.yomahub.liteflow.flow.LiteflowResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -26,50 +20,8 @@ public class RuleMatcher {
     private FmPolicyRuleService fmPolicyRuleService;
     @Resource
     private FmService fmService;
-    @Resource
-    private FmEventDefineService fmEventDefineService;
     private final Object lock = new Object();
 
-    public void matchAndExecuteRules(MSEvent msEvent) {
-        List<FmPolicyRules> rulesByEventId = fmPolicyRuleService.getRulesByEventId(msEvent.getEventId());
-        List<FmPolicyRules> rulesByTitle = fmPolicyRuleService.getRulesByTitle(msEvent.getTitle());
-        List<FmPolicyRules> rules= getCombinedRules(rulesByEventId, rulesByTitle);
-        if (CollectionUtils.isNotEmpty(rules)) {
-            for (FmPolicyRules rule : rules) {
-                int delayTime = rule.getDelayTime();
-                if (rule.getIsDeploy() == 0) {
-                    log.info("规则未启用 Rule not executed: {}", rule.getId());
-                    continue;
-                }
-                if (delayTime > 0) {
-                    // 延迟执行规则
-                    fmPolicyRuleService.processDelayedRule(msEvent, rule);
-                } else {
-                    executeRule(msEvent, rule, Integer.parseInt(rule.getId().toString()), "Rule executed successfully: {}", "Rule execution failed: {}");
-                }
-                log.info("Rule executed: {}", rule.getId());
-            }
-        }
-    }
-    /**
-     * 合并规则列表并根据规则ID去重
-     * @param rules 根据eventId获取的规则列表
-     * @param rulesByTitle 根据title获取的规则列表
-     * @return 去重后的规则列表
-     */
-    private List<FmPolicyRules> getCombinedRules(List<FmPolicyRules> rules, List<FmPolicyRules> rulesByTitle) {
-        List<FmPolicyRules> allRules = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(rules)) {
-            allRules.addAll(rules);
-        }
-        if (CollectionUtils.isNotEmpty(rulesByTitle)) {
-            allRules.addAll(rulesByTitle);
-        }
-        // 根据规则ID去重
-        Map<Long, FmPolicyRules> uniqueRulesMap = allRules.stream()
-                .collect(Collectors.toMap(FmPolicyRules::getId, rule -> rule, (existing, replacement) -> existing));
-        return new ArrayList<>(uniqueRulesMap.values());
-    }
     public void matchAndExecuteDelayRules(MqMessage mqMessage) {
         log.info("Executing rule: {}", mqMessage.getRuleId());
         // 这里添加具体的规则执行逻辑
@@ -99,6 +51,7 @@ public class RuleMatcher {
      */
     private void executeRule(MSEvent msEvent, FmPolicyRules fmPolicyRules, Integer ruleId, String successMsg, String errorMsg) {
         SupplementaryConditions conditions = getSupplementaryConditions(msEvent, fmPolicyRules);
+        conditions.setDelayedAlarm(1);
         LiteflowResponse response = flowExecutor.execute2Resp(String.valueOf(ruleId), null, conditions);
         if (response.isSuccess()) {
             log.info(successMsg, ruleId);
@@ -107,7 +60,7 @@ public class RuleMatcher {
             List<Long> childIds = new ArrayList<>();
             if (inheritType == 2) {
                 if (contextBean.doDerive) {
-                    MSEvent newEvent = deriveNewAlarm(contextBean, childIds, fmPolicyRules);
+                    MSEvent newEvent = fmService.deriveNewAlarm(contextBean, childIds, fmPolicyRules);
                     mergeAndFinishInherit(newEvent, childIds, fmPolicyRules);
                 }
             }else if (inheritType == 1) {
@@ -155,65 +108,6 @@ public class RuleMatcher {
         }
     }
 
-    private MSEvent deriveNewAlarm(SupplementaryConditions contextBean, List<Long> childIds, FmPolicyRules fmPolicyRules) {
-        FmEventDefine eventDefine = fmEventDefineService.getOne(Wrappers.lambdaQuery(FmEventDefine.class)
-                .eq(FmEventDefine::getEventId, fmPolicyRules.getPrimaryEventId()));
-        if (eventDefine == null) {
-            log.error("未定义衍生告警事件ID.");
-            return null;
-        }
-        List<MSEvent> childrens = contextBean.getChildrens();
-        MSEvent earliest = parseChilds(childrens, childIds);
-        MSEvent event = new MSEvent();
-        event.setSourceId(convertSourceId(contextBean.getSourceIdConds(), fmPolicyRules));
-        event.setDescr(generatorDesc(earliest, fmPolicyRules)); // 告警正文
-        RuleUtils.fillEventTime(event, earliest.getOccurTime());
-        RuleUtils.fill(event, earliest);
-        RuleUtils.fillEventDefine(event, eventDefine);
-        return event;
-    }
-
-    private String generatorDesc(MSEvent earliest, FmPolicyRules fmPolicyRules) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("省份:[河南省]")
-                .append(" 地市:[")
-                .append(earliest.getDeviceCity())
-                .append("] 网元:[")
-                .append(earliest.getDeviceName())
-                .append("] 告警标题:")
-                .append(fmPolicyRules.getPrimaryTitle())
-                .append(" 告警产生时间:");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        try {
-            sb.append(dateFormat.format(earliest.getOccurTime()));
-        } catch (Exception e) {
-            log.error("日期格式化异常", e);
-        }
-        return sb.toString();
-    }
-
-    protected String convertSourceId(List<String> values, FmPolicyRules policyRule) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("MIX-").append(policyRule.getPrimaryEventId()).append("_");
-        for (String value : values) {
-            sb.append(value).append("_");
-        }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:00");
-        sb.append(dateFormat.format(new Date()));
-        return sb.toString();
-    }
-
-    private MSEvent parseChilds(List<MSEvent> childrens, List<Long> childIds) {
-        MSEvent earliest = null;
-        for (MSEvent event : childrens) {
-            childIds.add(event.getRecordId());
-            if (earliest == null || earliest.getOccurTime().after(event.getOccurTime())) {
-                earliest = event;
-            }
-        }
-        return earliest;
-    }
-
     private SupplementaryConditions getSupplementaryConditions(MSEvent msEvent, FmPolicyRules fmPolicyRules) {
         SupplementaryConditions conditions = new SupplementaryConditions();
         conditions.setMsEvent(msEvent);
@@ -235,13 +129,14 @@ public class RuleMatcher {
                 if (response.isSuccess()) {
                     try {
                         SupplementaryConditions contextBean = response.getContextBean(SupplementaryConditions.class);
+                        Long recordId = contextBean.getMsEvent().getRecordId();
                         FmPolicyRules fmPolicyRules = contextBean.getFmPolicyRules();
-                        log.info(  " execute success, ruleId:{}", response.getChainId());
+                        log.info("execute success,recordId, ruleId:{}", recordId, response.getChainId());
                         int inheritType = fmPolicyRules.getInheritType();
                         List<Long> childIds = new ArrayList<>();
                         if (inheritType == 2) {
                             if (contextBean.isDoDerive()) {
-                                MSEvent newEvent = deriveNewAlarm(contextBean, childIds, fmPolicyRules);
+                                MSEvent newEvent = fmService.deriveNewAlarm(contextBean, childIds, fmPolicyRules);
                                 mergeAndFinishInherit(newEvent, childIds, fmPolicyRules);
                             }
                         }else if (inheritType == 1) {

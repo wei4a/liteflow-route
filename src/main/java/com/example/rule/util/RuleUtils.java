@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -235,5 +236,46 @@ public class RuleUtils {
         mqMessage.setRecordId(msEvent.getRecordId());
         mqMessage.setTitle(msEvent.getTitle());
         return mqMessage;
+    }
+
+    public static MSEvent parseChilds(List<MSEvent> childrens, List<Long> childIds) {
+        MSEvent earliest = null;
+        for (MSEvent event : childrens) {
+            childIds.add(event.getRecordId());
+            if (earliest == null || earliest.getOccurTime().after(event.getOccurTime())) {
+                earliest = event;
+            }
+        }
+        return earliest;
+    }
+
+    public static String convertSourceId(List<String> values, FmPolicyRules policyRule) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("MIX-").append(policyRule.getPrimaryEventId()).append("_");
+        for (String value : values) {
+            sb.append(value).append("_");
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:00");
+        sb.append(dateFormat.format(new Date()));
+        return sb.toString();
+    }
+
+    public static String generatorDesc(MSEvent earliest, FmPolicyRules fmPolicyRules) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("省份:[河南省]")
+                .append(" 地市:[")
+                .append(earliest.getDeviceCity())
+                .append("] 网元:[")
+                .append(earliest.getDeviceName())
+                .append("] 告警标题:")
+                .append(fmPolicyRules.getPrimaryTitle())
+                .append(" 告警产生时间:");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            sb.append(dateFormat.format(earliest.getOccurTime()));
+        } catch (Exception e) {
+            log.error("日期格式化异常", e);
+        }
+        return sb.toString();
     }
 }

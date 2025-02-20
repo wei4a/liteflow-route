@@ -21,7 +21,7 @@ public class ActiveMQConsumer {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             MSEvent msEvent = objectMapper.readValue(message, MSEvent.class);
-            ruleMatcher.matchAndExecuteRules(msEvent);
+            ruleMatcher.executeRules(msEvent);
         } catch (Exception e) {
             log.error("Failed to process message: {}", e.getMessage(), e);
         }

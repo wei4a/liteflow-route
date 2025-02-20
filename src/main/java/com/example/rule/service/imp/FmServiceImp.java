@@ -1,9 +1,10 @@
 package com.example.rule.service.imp;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.rule.mapper.FmMapper;
-import com.example.rule.model.MSEvent;
-import com.example.rule.model.OperationType;
+import com.example.rule.model.*;
+import com.example.rule.service.FmEventDefineService;
 import com.example.rule.service.FmService;
 import com.example.rule.util.RuleUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,8 @@ import java.util.List;
 public class FmServiceImp extends ServiceImpl<FmMapper, MSEvent> implements FmService {
     @Resource
     private JdbcTemplate jdbcTemplate;
-
+    @Resource
+    private FmEventDefineService fmEventDefineService;
     @Override
     public void inheritMerge(MSEvent msEvent) {
         String string = RuleUtils.getLenString(msEvent.getDescr(), 4000);
@@ -278,6 +280,25 @@ public class FmServiceImp extends ServiceImpl<FmMapper, MSEvent> implements FmSe
             }
         };
         jdbcTemplate.execute(sproc, csc);
+    }
+
+    @Override
+    public MSEvent deriveNewAlarm(SupplementaryConditions contextBean, List<Long> childIds, FmPolicyRules fmPolicyRules) {
+        FmEventDefine eventDefine = fmEventDefineService.getOne(Wrappers.lambdaQuery(FmEventDefine.class)
+                .eq(FmEventDefine::getEventId, fmPolicyRules.getPrimaryEventId()));
+        if (eventDefine == null) {
+            log.error("未定义衍生告警事件ID.");
+            return null;
+        }
+        List<MSEvent> childrens = contextBean.getChildrens();
+        MSEvent earliest = RuleUtils.parseChilds(childrens, childIds);
+        MSEvent event = new MSEvent();
+        event.setSourceId(RuleUtils.convertSourceId(contextBean.getSourceIdConds(), fmPolicyRules));
+        event.setDescr(RuleUtils.generatorDesc(earliest, fmPolicyRules)); // 告警正文
+        RuleUtils.fillEventTime(event, earliest.getOccurTime());
+        RuleUtils.fill(event, earliest);
+        RuleUtils.fillEventDefine(event, eventDefine);
+        return event;
     }
 
 }
