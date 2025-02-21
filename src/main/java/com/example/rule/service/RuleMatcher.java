@@ -1,8 +1,11 @@
 package com.example.rule.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.rule.model.*;
-import com.yomahub.liteflow.core.FlowExecutor;
+import com.example.rule.model.FmPolicyRules;
+import com.example.rule.model.MSEvent;
+import com.example.rule.model.MqMessage;
+import com.example.rule.model.SupplementaryConditions;
+import com.example.rule.service.inheritance.InheritanceStrategy;
 import com.yomahub.liteflow.flow.LiteflowResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,17 +13,20 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
 public class RuleMatcher {
     @Resource
-    private FlowExecutor flowExecutor;
-    @Resource
     private FmPolicyRuleService fmPolicyRuleService;
     @Resource
     private FmService fmService;
-    private final Object lock = new Object();
+    @Resource
+    private RuleExecutorService ruleExecutorService;
+    @Resource
+    private Map<Integer, InheritanceStrategy> inheritanceStrategyMap;
+
 
     public void matchAndExecuteDelayRules(MqMessage mqMessage) {
         log.info("Executing rule: {}", mqMessage.getRuleId());
@@ -43,6 +49,7 @@ public class RuleMatcher {
 
     /**
      * 单个规则执行
+     *
      * @param msEvent
      * @param fmPolicyRules
      * @param ruleId
@@ -52,59 +59,14 @@ public class RuleMatcher {
     private void executeRule(MSEvent msEvent, FmPolicyRules fmPolicyRules, Integer ruleId, String successMsg, String errorMsg) {
         SupplementaryConditions conditions = getSupplementaryConditions(msEvent, fmPolicyRules);
         conditions.setDelayedAlarm(1);
-        LiteflowResponse response = flowExecutor.execute2Resp(String.valueOf(ruleId), null, conditions);
+        LiteflowResponse response = ruleExecutorService.executeSingleRule(String.valueOf(ruleId), conditions);
         if (response.isSuccess()) {
             log.info(successMsg, ruleId);
             SupplementaryConditions contextBean = response.getContextBean(SupplementaryConditions.class);
-            int inheritType = contextBean.getFmPolicyRules().getInheritType();
-            List<Long> childIds = new ArrayList<>();
-            if (inheritType == 2) {
-                if (contextBean.doDerive) {
-                    MSEvent newEvent = fmService.deriveNewAlarm(contextBean, childIds, fmPolicyRules);
-                    mergeAndFinishInherit(newEvent, childIds, fmPolicyRules);
-                }
-            }else if (inheritType == 1) {
-                if (contextBean.doMainSubRelation) {
-                    List<MSEvent> parents = contextBean.getParents();
-                    List<MSEvent> childrens = contextBean.getChildrens();
-                    for (MSEvent children : childrens) {
-                        childIds.add(children.getRecordId());
-                    }
-                    for (MSEvent parent : parents) {
-                        finishedReleationShip(parent, childIds, fmPolicyRules);
-                    }
-                }
-            }
+            handleInheritance(contextBean, fmPolicyRules);
 
         } else {
             log.info(errorMsg, response.getCause());
-        }
-    }
-
-    private void mergeAndFinishInherit(MSEvent newEvent, List<Long> childIds, FmPolicyRules fmPolicyRules) {
-        if (newEvent == null) {
-            log.error("Derive fail! {}.", fmPolicyRules.getRuleName());
-            return;
-        }
-        synchronized (lock) {
-            fmService.inheritMerge(newEvent);
-        }
-        log.info("{} recordid {}.", newEvent.getOperationType() == OperationType.INSERT ? "newEvent" : "updateEvent", newEvent.getRecordId());
-        if (newEvent.getRecordId() > 0) {
-            log.info("衍生告警 主告警{}, 次告警{}.", newEvent.getRecordId(), childIds);
-            finishedReleationShip(newEvent, childIds, fmPolicyRules);
-        } else {
-            log.info("Derive fail! {}.", newEvent.getRecordId());
-        }
-    }
-
-    private void finishedReleationShip(MSEvent newEvent, List<Long> childIds, FmPolicyRules policyRule) {
-        try {
-            synchronized (lock) {
-                fmService.updateInherit(newEvent.getRecordId(), childIds, policyRule.getId());
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
         }
     }
 
@@ -119,12 +81,13 @@ public class RuleMatcher {
 
     /**
      * 带有决策路由的规则执行
+     *
      * @param msEvent
      */
     public void executeRules(MSEvent msEvent) {
         try {
             SupplementaryConditions conditions = assembleSupplementaryConditions(msEvent);
-            List<LiteflowResponse> liteflowResponses = flowExecutor.executeRouteChain("liteflow-route",null, conditions);
+            List<LiteflowResponse> liteflowResponses = ruleExecutorService.executeRules(conditions);
             for (LiteflowResponse response : liteflowResponses) {
                 if (response.isSuccess()) {
                     try {
@@ -132,30 +95,12 @@ public class RuleMatcher {
                         Long recordId = contextBean.getMsEvent().getRecordId();
                         FmPolicyRules fmPolicyRules = contextBean.getFmPolicyRules();
                         log.info("execute success,recordId, ruleId:{}", recordId, response.getChainId());
-                        int inheritType = fmPolicyRules.getInheritType();
-                        List<Long> childIds = new ArrayList<>();
-                        if (inheritType == 2) {
-                            if (contextBean.isDoDerive()) {
-                                MSEvent newEvent = fmService.deriveNewAlarm(contextBean, childIds, fmPolicyRules);
-                                mergeAndFinishInherit(newEvent, childIds, fmPolicyRules);
-                            }
-                        }else if (inheritType == 1) {
-                            if (contextBean.doMainSubRelation) {
-                                List<MSEvent> parents = contextBean.getParents();
-                                List<MSEvent> childrens = contextBean.getChildrens();
-                                for (MSEvent children : childrens) {
-                                    childIds.add(children.getRecordId());
-                                }
-                                for (MSEvent parent : parents) {
-                                    finishedReleationShip(parent, childIds, fmPolicyRules);
-                                }
-                            }
-                        }
+                        handleInheritance(contextBean, fmPolicyRules);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    log.info(  " execute fail, ruleId:{}", response.getChainId());
+                    log.info(" execute fail, ruleId:{}", response.getChainId());
                 }
             }
 
@@ -170,5 +115,16 @@ public class RuleMatcher {
         conditions.setFmPolicyRuleService(fmPolicyRuleService);
         conditions.setFmService(fmService);
         return conditions;
+    }
+
+    private void handleInheritance(SupplementaryConditions contextBean, FmPolicyRules fmPolicyRules) {
+        int inheritType = fmPolicyRules.getInheritType();
+        InheritanceStrategy strategy = inheritanceStrategyMap.get(inheritType);
+        if (strategy != null) {
+            List<Long> childIds = new ArrayList<>();
+            strategy.process(contextBean, childIds, fmPolicyRules);
+        } else {
+            log.info("未找到对应的继承策略处理器：{}", inheritType);
+        }
     }
 }

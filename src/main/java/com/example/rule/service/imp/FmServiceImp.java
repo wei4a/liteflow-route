@@ -27,6 +27,8 @@ public class FmServiceImp extends ServiceImpl<FmMapper, MSEvent> implements FmSe
     private JdbcTemplate jdbcTemplate;
     @Resource
     private FmEventDefineService fmEventDefineService;
+    private final Object lock = new Object();
+
     @Override
     public void inheritMerge(MSEvent msEvent) {
         String string = RuleUtils.getLenString(msEvent.getDescr(), 4000);
@@ -257,6 +259,7 @@ public class FmServiceImp extends ServiceImpl<FmMapper, MSEvent> implements FmSe
         };
         jdbcTemplate.execute(sproc, csc);
     }
+
     @Override
     public void updateInherit(Long pRecordId, List<Long> childIds, Long ruleId) {
         String sproc = "{call P_FM_UPDATE_INHERIT(?,?,?,?,?)}";
@@ -299,6 +302,34 @@ public class FmServiceImp extends ServiceImpl<FmMapper, MSEvent> implements FmSe
         RuleUtils.fill(event, earliest);
         RuleUtils.fillEventDefine(event, eventDefine);
         return event;
+    }
+
+    public void mergeAndFinishInherit(MSEvent newEvent, List<Long> childIds, FmPolicyRules fmPolicyRules) {
+        if (newEvent == null) {
+            log.error("Derive fail! {}.", fmPolicyRules.getRuleName());
+            return;
+        }
+        synchronized (lock) {
+            inheritMerge(newEvent);
+            log.info("{} recordid {}.", newEvent.getOperationType() == OperationType.INSERT ? "newEvent" : "updateEvent", newEvent.getRecordId());
+            if (newEvent.getRecordId() > 0) {
+                log.info("衍生告警 主告警{}, 次告警{}.", newEvent.getRecordId(), childIds);
+                finishedReleationShip(newEvent, childIds, fmPolicyRules);
+            } else {
+                log.info("Derive fail! {}.", newEvent.getRecordId());
+            }
+        }
+
+    }
+
+    public void finishedReleationShip(MSEvent newEvent, List<Long> childIds, FmPolicyRules policyRule) {
+        try {
+            synchronized (lock) {
+                updateInherit(newEvent.getRecordId(), childIds, policyRule.getId());
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
 }

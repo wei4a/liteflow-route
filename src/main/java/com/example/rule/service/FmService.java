@@ -13,4 +13,8 @@ public interface FmService extends IService<MSEvent> {
     void updateInherit(Long recordId, List<Long> childIds, Long id);
 
     MSEvent deriveNewAlarm(SupplementaryConditions contextBean, List<Long> childIds, FmPolicyRules fmPolicyRules);
+
+    void mergeAndFinishInherit(MSEvent newEvent, List<Long> childIds, FmPolicyRules fmPolicyRules);
+
+    void finishedReleationShip(MSEvent parent, List<Long> childIds, FmPolicyRules fmPolicyRules);
 }

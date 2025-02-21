@@ -60,3 +60,6 @@ liteflow:
   #默认为false，如果设为true，则会开启WHEN的线程池隔离机制，这意味着每一个when都会有单独的线程池。
   #这个特性对于运行复杂的嵌套when时是可以提升运行速度的且规避掉一些锁的问题。
   when-thread-pool-isolate: true
+
+rule:
+  route: liteflow-route
