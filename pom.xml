@@ -105,10 +105,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.oracle</groupId>
+            <groupId>com.oracle.database.nls</groupId>
             <artifactId>orai18n</artifactId>
-            <version>11.2.0.3</version>
-            <!-- Oracle数据库的国际化支持。 -->
+            <version>19.3.0.0</version>
         </dependency>
         <!-- MyBatis-Plus -->
         <dependency>
