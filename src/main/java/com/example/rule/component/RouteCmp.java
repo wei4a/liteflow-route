@@ -22,13 +22,15 @@ public class RouteCmp extends NodeBooleanComponent {
         MSEvent msEvent = spConditions.getMsEvent();
         RouteDatas cmpData = this.getCmpData(RouteDatas.class);
         String ruleName = cmpData.getRuleName();
-        FmPolicyRules fmPolicyRules = fmPolicyRuleService.getRule(ruleName);
-        if(fmPolicyRules.getIsDeploy()==0){
-            log.error("规则{}未部署，请检查规则配置.", ruleName);
-            return false;
-        }
-        if (StringUtils.contains(fmPolicyRules.getSecondaryEventId(), msEvent.getEventId())
-                || StringUtils.contains(fmPolicyRules.getSecondaryTitle(), msEvent.getTitle())) {
+        String secondaryTitle = cmpData.getSecondaryTitle();
+        String secondaryEventId = cmpData.getSecondaryEventId();
+        if (StringUtils.contains(secondaryEventId, msEvent.getEventId())
+                || StringUtils.contains(secondaryTitle, msEvent.getTitle())) {
+            FmPolicyRules fmPolicyRules = fmPolicyRuleService.getRule(ruleName);
+            if (fmPolicyRules.getIsDeploy() == 0) {
+                log.error("规则{}未部署，请检查规则配置.", ruleName);
+                return false;
+            }
             spConditions.setPrimaryEventId(fmPolicyRules.getPrimaryEventId());
             spConditions.setFmPolicyRules(fmPolicyRules);
             log.info("规则{}匹配成功.", ruleName);
