@@ -55,7 +55,7 @@ liteflow:
     #是否启用这条脚本
     scriptEnableField: enable
     #脚本表自定义过滤SQL
-    scriptCustomSql: select * from fm_policy_rules_script where enable = 1
+    scriptCustomSql: select * from fm_policy_rules_script where enable = 1 and TYPE=1
 
   #默认为false，如果设为true，则会开启WHEN的线程池隔离机制，这意味着每一个when都会有单独的线程池。
   #这个特性对于运行复杂的嵌套when时是可以提升运行速度的且规避掉一些锁的问题。
